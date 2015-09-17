@@ -1,0 +1,374 @@
+{% extends "base_page.html" %}
+{% load staticfiles %}
+{% block route %}
+<li><a href="/wsnetwork/all_nodes/{{coordinador}}"><span class="glyphicon glyphicon-home"></span></a></li>
+<li class="active">Dashboard / <span class="glyphicon glyphicon-cloud"></span>  nodos / <span class="glyphicon glyphicon-signal"></span> {{titulo}}</li>
+{% endblock %}
+
+{% block scripts%}
+
+   <style type="text/css">
+       body {
+	font-family: Tahoma,Arial,Verdana;
+	font-size: 12px;
+	color: black;
+}
+
+#chartdiv {
+	width	: 75%;
+	height	: 500px;
+    float   : right;
+}
+   </style>
+
+
+<script type="text/javascript">
+$(document).ready(function() {
+        var node = {{nodo}};
+        var datachart  =  AmCharts.loadJSON('{% url 'graph_data' nodo%}');
+
+        var ballcolors = ["Blue","BlueViolet","Brown","BurlyWood","CadetBlue","Chartreuse","Chocolate","Coral","CornflowerBlue","Cornsilk","Crimson","Cyan","DarkBlue","DarkCyan","DarkGoldenRod","DarkGray","DarkGrey","DarkGreen","DarkKhaki","DarkMagenta","DarkOliveGreen","Darkorange","DarkOrchid","DarkRed","DarkSalmon","DarkSeaGreen","DarkSlateBlue","DarkSlateGray","DarkSlateGrey","DarkTurquoise","DarkViolet","DeepPink","DeepSkyBlue","DimGray","DimGrey","DodgerBlue","FireBrick","FloralWhite","ForestGreen","Fuchsia","Gainsboro","GhostWhite","Gold","GoldenRod","Gray","Grey","Green","GreenYellow","HoneyDew","HotPink","IndianRed","Indigo","Ivory","Khaki","Lavender","LavenderBlush","LawnGreen","LemonChiffon","LightBlue","LightCoral","LightCyan","LightGoldenRodYellow","LightGray","LightGrey","LightGreen","LightPink","LightSalmon","LightSeaGreen","LightSkyBlue","LightSlateGray","LightSlateGrey","LightSteelBlue","LightYellow","Lime","LimeGreen","Linen","Magenta","Maroon","MediumAquaMarine","MediumBlue","MediumOrchid","MediumPurple","MediumSeaGreen","MediumSlateBlue","MediumSpringGreen","MediumTurquoise","MediumVioletRed","MidnightBlue","MintCream","MistyRose","Moccasin","NavajoWhite","Navy","OldLace","Olive","OliveDrab","Orange","OrangeRed","Orchid","PaleGoldenRod","PaleGreen","PaleTurquoise","PaleVioletRed","PapayaWhip","PeachPuff","Peru","Pink","Plum","PowderBlue","Purple","Red","RosyBrown","RoyalBlue","SaddleBrown","Salmon","SandyBrown","SeaGreen","SeaShell","Sienna","Silver","SkyBlue","SlateBlue","SlateGray","SlateGrey","Snow","SpringGreen","SteelBlue","Tan","Teal","Thistle","Tomato","Turquoise","Violet","Wheat","White","WhiteSmoke","Yellow","YellowGreen"];
+        var chart;
+        var chartData = [];
+        var counter = 0;
+        chart = new AmCharts.AmSerialChart();
+
+        AmCharts.ready(function () {
+            // SERIAL CHART
+
+            //chart.pathToImages = "http://www.amcharts.com/lib/images/";
+            chart.pathToImages = "{%static 'modulo_monitoreo/amcharts/images/' %}";
+            chart.dataProvider = datachart;
+            chart.categoryField = "fecha";
+            chart.dataDateFormat= "YYYY-MM-DD JJ:NN:SS";
+
+            // listen for "dataUpdated" event (fired when chart is inited) and call zoomChart method when it happens
+            chart.addListener("dataUpdated", zoomChart);
+
+            // AXES
+            // category
+            var categoryAxis = chart.categoryAxis;
+            categoryAxis.parseDates = true; // as our data is date-based, we set parseDates to true
+            categoryAxis.minPeriod = "ss"; // our data is daily, so we set minPeriod to DD
+            categoryAxis.minorGridEnabled = true;
+            categoryAxis.axisColor = "#DADADA";
+            categoryAxis.twoLineMode = true;
+            categoryAxis.dateFormats = [
+            {
+                period: 'fff',
+                format: 'JJ:NN:SS'
+            }, {
+                period: 'ss',
+                format: 'JJ:NN:SS'
+            }, {
+                period: 'mm',
+                format: 'JJ:NN'
+            }, {
+                period: 'hh',
+                format: 'JJ:NN'
+            }, {
+                period: 'DD',
+                format: 'DD'
+            }, {
+                period: 'WW',
+                format: 'DD'
+            }, {
+                period: 'MM',
+                format: 'MMM'
+            }, {
+                period: 'YYYY',
+                format: 'YYYY'
+            }];
+
+            var color;
+            var offset  = 0;
+            var graph;
+            {% for grafica in graficas%}
+                // first value axis (on the left)
+                var valueAxis{{grafica}} = new AmCharts.ValueAxis();
+                valueAxis{{grafica}}.offset=offset;
+                valueAxis{{grafica}}.axisColor = ballcolors[counter];
+                valueAxis{{grafica}}.axisThickness = 2;
+                valueAxis{{grafica}}.gridAlpha = 0;
+                chart.addValueAxis(valueAxis{{grafica}});
+
+                // GRAPHS
+                // first graph
+                var graph{{grafica}} = new AmCharts.AmGraph();
+                graph{{grafica}}.valueAxis = valueAxis{{grafica}}; // we have to indicate which value axis should be used
+                graph{{grafica}}.title = "{{grafica}}";
+                graph{{grafica}}.lineColor=ballcolors[counter];
+                graph{{grafica}}.valueField = "{{grafica}}";
+                graph{{grafica}}.bullet = "round";
+                graph{{grafica}}.hideBulletsCount = 100;
+                graph{{grafica}}.bulletBorderThickness = 1;
+                {% if grafica == 'temperatura' %}
+                    graph{{grafica}}.balloonText = "<b>[[{{grafica}}]] Cº</b>";
+
+                {% elif grafica == 'humedad' %}
+                    graph{{grafica}}.balloonText = "<b>[[{{grafica}}]]% </b>";
+                {% else %}
+                    graph{{grafica}}.balloonText = "<b>[[{{grafica}}]] </b>";
+                {% endif %}
+
+                chart.addGraph(graph{{grafica}});
+                graph ="graph{{grafica}}"
+                offset = offset + 50;
+                counter = counter  +1 ;
+            {% endfor %}
+
+
+            // CURSOR
+            var chartCursor = new AmCharts.ChartCursor();
+            chartCursor.cursorAlpha = 0.1;
+            chartCursor.cursorPosition = "mouse";
+            chartCursor.categoryBalloonDateFormat = "JJ:NN:SS, DD MMMM";
+            chartCursor.fullWidth = true;
+            chartCursor.valueLineEnabled=true;
+            chartCursor.valueLineBallonEnabled = true;
+            chart.addChartCursor(chartCursor);
+
+            // SCROLLBAR
+            var chartScrollbar = new AmCharts.ChartScrollbar();
+            chartScrollbar.graph = graph;
+            chartScrollbar.scrollbarHeight = 40;
+            chartScrollbar.color = "#FFFFFF";
+            chartScrollbar.autoGridCount = true;
+            chart.addChartScrollbar(chartScrollbar);
+
+            // LEGEND
+            var legend = new AmCharts.AmLegend();
+
+            legend.useGraphSettings = true;
+            chart.addLegend(legend);
+
+            chart.amExport={
+                 top:21,
+                  right:20,
+                  exportJPG:true,
+                  exportPNG:true,
+                  exportSVG:true
+                };
+
+            chart.mouseWheelZoomEnabled=true;
+
+            // WRITE
+            chart.write("chartdiv");
+
+        });
+
+        // this method is called when chart is first inited as we listen for "dataUpdated" event
+        function zoomChart() {
+            // different zoom methods can be used - zoomToIndexes, zoomToDates, zoomToCategoryValues
+            chart.zoomToIndexes(datachart.length-5,datachart.length);
+        }
+
+        function get_dates(nodo,start_date,end_date){
+            console.log("create post is working!") // sanity check
+            $.ajax({
+                    url : "/wsnetwork/rangepick/", // the endpoint
+                    type : "POST", // http method
+                    data : { nodo: nodo, start_date:start_date,end_date:end_date }, // data sent with the post request
+
+                    // handle a successful response
+                success : function(json) {
+                    console.log(json); // log the returned json to the console
+                    console.log(json.length);
+                    //var data_length = json.length;
+                    //console.log(json[0]["fecha_inicio"] + " " +json[0]["fecha_fin"]);
+                    chart.dataProvider =   json;
+                    chart.validateData();
+                    chart.animateAgain();
+                    console.log("success"); // another sanity check
+                },
+                // handle a non-successful response
+                error : function(xhr,errmsg,err) {
+                    $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                    " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                    console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                }
+            });
+        }
+
+//***************************SCRIPT PARA BUSCAR POR FECHAS**************************************
+        $('#reservationtime').daterangepicker({
+            startDate: moment(),
+            endDate: moment(),
+            timePicker: true,
+            timePickerIncrement: 30,
+            format: 'YYYY/MM/DD h:mm:ss A',
+        }, function(start, end, label) {
+            console.log(start.format('MMMM D, YYYY HH:MM'), end.format('MMMM D, YYYY HH:MM'));
+            alert("nodo " + node +" Callback has fired: [" + start.format('MMMM D, YYYY HH:MM') + "-" + end.format('MMMM D, YYYY HH:MM') +"]")
+            //mandar a redibujar la grafica con los nuevos datos
+            get_dates(node,start.format('YYYY-MM-DD HH:MM'),end.format('YYYY-MM-DD HH:MM'));
+        }); //*******fin de script***************
+    });
+</script>
+{% endblock%}
+ <!--definir el bloque de codigo para el cuerpo-->
+{% block content%}
+    <form class="form-horizontal">
+        <fieldset>
+            <div class="control-group">
+                <label class="control-label" for="reservationtime">Elija fecha inicial y fecha final:</label>
+                <div class="controls">
+                    <div class="input-prepend input-group">
+                        <span class="add-on input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                        <input type="text" style="width: 400px" name="reservation" id="reservationtime" class="form-control" value=""  class="span4" readonly/>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+    </form>
+
+
+<!--CONTENTIDO-->
+    <div class="row">
+        <div class="col-lg-12">
+           <div class = "panel-body">
+               <div class="panel panel-primary" id="chartdiv" style="
+                     border-style: solid;
+                     border-width: medium;
+                     width: 100%; height: 400px;">
+
+               </div>
+
+	       </div>
+        </div>
+<div class="col-lg-12">
+           <div class = "panel-body">
+               <div class="panel panel-primary" id="chartdiv2" style="
+                     border-style: solid;
+                     border-width: medium;
+                     width: 100%; height: 500px;">
+
+               </div>
+
+	       </div>
+        </div>
+
+    </div><!--/.row-->
+
+
+<script type="text/javascript">
+<!--FIN DE CONTENIDO-->
+var chart;
+var chartData = [];
+var chartCursor;
+var day = 0;
+var firstDate = new Date();
+firstDate.setDate(firstDate.getDate() - 500);
+
+// generate some random data, quite different range
+function generateChartData() {
+    for (day = 0; day < 50; day++) {
+        var newDate = new Date(firstDate);
+        newDate.setDate(newDate.getDate() + day);
+
+        var visits = Math.round(Math.random() * 40) - 20;
+
+        chartData.push({
+            date: newDate,
+            visits: visits
+        });
+    }
+}
+
+// create chart
+AmCharts.ready(function() {
+    // generate some data first
+    generateChartData();
+
+    // SERIAL CHART
+    chart = new AmCharts.AmSerialChart();
+    chart.pathToImages = "http://www.amcharts.com/lib/images/";
+    chart.marginTop = 0;
+    chart.marginRight = 10;
+    chart.autoMarginOffset = 5;
+    chart.zoomOutButton = {
+        backgroundColor: '#000000',
+        backgroundAlpha: 0.15
+    };
+    chart.dataProvider = chartData;
+    chart.categoryField = "date";
+    chart.dataDateFormat= "YYYY-MM-DD JJ:NN:SS";
+
+    // AXES
+    // category
+    var categoryAxis = chart.categoryAxis;
+    categoryAxis.parseDates = true; // as our data is date-based, we set parseDates to true
+    categoryAxis.minPeriod = "ss"; // our data is daily, so we set minPeriod to DD
+    categoryAxis.dashLength = 1;
+    categoryAxis.gridAlpha = 0.15;
+    categoryAxis.axisColor = "#DADADA";
+
+    // value
+    var valueAxis = new AmCharts.ValueAxis();
+    valueAxis.axisAlpha = 0.2;
+    valueAxis.dashLength = 1;
+    chart.addValueAxis(valueAxis);
+
+    // GRAPH
+    var graph = new AmCharts.AmGraph();
+    graph.title = "red line";
+    graph.valueField = "visits";
+    graph.bullet = "round";
+    graph.bulletBorderColor = "#FFFFFF";
+    graph.bulletBorderThickness = 2;
+    graph.lineThickness = 2;
+    graph.lineColor = "#b5030d";
+    graph.negativeLineColor = "#0352b5";
+    graph.hideBulletsCount = 50; // this makes the chart to hide bullets when there are more than 50 series in selection
+    chart.addGraph(graph);
+
+    // CURSOR
+    chartCursor = new AmCharts.ChartCursor();
+    chartCursor.cursorPosition = "mouse";
+    chart.addChartCursor(chartCursor);
+
+    // SCROLLBAR
+    var chartScrollbar = new AmCharts.ChartScrollbar();
+    chartScrollbar.graph = graph;
+    chartScrollbar.scrollbarHeight = 40;
+    chartScrollbar.color = "#FFFFFF";
+    chartScrollbar.autoGridCount = true;
+    chart.addChartScrollbar(chartScrollbar);
+
+    // WRITE
+    chart.write("chartdiv2");
+
+    // set up the chart to update every second
+    setInterval(function () {
+        // normally you would load new datapoints here,
+        // but we will just generate some random values
+        // and remove the value from the beginning so that
+        // we get nice sliding graph feeling
+
+        // remove datapoint from the beginning
+        chart.dataProvider.shift();
+
+        // add new one at the end
+        day++;
+        var newDate = new Date(firstDate);
+        newDate.setDate(newDate.getDate() + day);
+        var visits = Math.round(Math.random() * 40) - 20;
+        chart.dataProvider.push({
+            date: newDate,
+            visits: visits
+        });
+        chart.validateData();
+    }, 1000);
+});
+
+
+</script>
+
+
+{% endblock %}
+
+<!--
+https://github.com/dangrossman/bootstrap-daterangepicker
+http://www.dangrossman.info/2012/08/20/a-date-range-picker-for-twitter-bootstrap/
+
+-->

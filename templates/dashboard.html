@@ -1,0 +1,72 @@
+{% extends "base_page.html" %}
+{% load staticfiles %}
+{% block route%}
+<li><a href="/wsnetwork"><span class="glyphicon glyphicon-home"></span></a></li>
+<li class="active"> <span class="glyphicon glyphicon-dashboard"></span> Dashboard </li>
+{% endblock %}
+ <!--definir el bloque de codigo para el cuerpo-->
+{% block content%}
+
+<div id="_networks" class="row" >
+    	{%for red in redes%}
+
+         	<div class="col-xs-6 col-md-5">
+				<div class="panel panel-primary">
+                    <div class="panel-heading text-capitalize text-left panel-dblue">{{red.nombre_De_Red}}</div>
+                    <div class="col-lg-14 col-centered">
+                        <a href="/wsnetwork/all_nodes/{{red.direccion_Coordinador}}">
+       			            <img class="img-responsive center-block " src="{%static 'modulo_monitoreo/images/meshnetwork.jpg' %}">
+       					</a>
+                    </div>
+				</div>
+			</div>
+
+        {% endfor %}
+</div><!--/.row-->
+
+<script type="text/javascript">
+$(function() {
+    function get_new_post(){
+        console.log("create post is working!") // sanity check
+        $.ajax({
+            url : "/wsnetwork/get_networks/", // the endpoint
+            type : "GET", // http method
+            data : { }, // data sent with the post request
+            // handle a successful response
+            success : function(json) {
+                console.log(json); // log the returned json to the console
+                console.log(json.length);
+                var data_length = json.length;
+                $("#_networks").empty();
+                for (var i = 0; i < data_length; i++) {
+                    //alert(json[i]["direccion"] + " " + json[i]["titulo"]);
+                    $("#_networks").append("<div class='col-xs-6 col-md-5'>"+
+                                "<div class='panel panel-primary'>"+
+                                    "<div class='panel-heading text-capitalize text-left panel-dblue'>"
+                                        +json[i]["titulo"]+
+                                    "</div>"+
+                                    "<div class='col-lg-14 col-centered'>"+
+                                        "<a href='/wsnetwork/all_nodes/"+json[i]["direccion"]+"'>"+
+                                            "<img class='img-responsive center-block' src='{%static 'modulo_monitoreo/images/meshnetwork.jpg' %}'>"+
+                                       "</a> </div> </div> </div>");
+                    console.log("GIAN CUELLO");
+                }
+
+                console.log("success"); // another sanity check
+                setTimeout(get_new_post,5000);
+            },
+            // handle a non-successful response
+            error : function(xhr,errmsg,err) {
+                $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                    " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+            }
+        });
+    };
+    window.onload=get_new_post;
+    });
+
+
+</script>
+
+   {% endblock %}

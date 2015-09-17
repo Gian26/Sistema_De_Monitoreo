@@ -1,0 +1,138 @@
+{% extends "base_page.html" %}
+{% load staticfiles %}
+{% block route%}
+<li><a href="/wsnetwork"> <span class="glyphicon glyphicon-dashboard"></span></a></li>
+<li class="active"> Dashboard / <span class="glyphicon glyphicon-cloud"></span> nodos /</li>
+{% endblock %}
+ <!--definir el bloque de codigo para el cuerpo-->
+{% block content%}
+
+<div class="panel-body">
+
+    <div class="no_nodo">
+
+    </div>
+
+    <div id="esconder" class = "panel-body panel-lightgrey">
+        {% if error_message %}
+            <div class="alert alert-danger alert-dismissable">
+               <button type="button" class="close" data-dismiss="alert"
+                  aria-hidden="true">
+                  &times;
+               </button>
+               <span class="glyphicon glyphicon-exclamation-sign"></span> {{error_message}} <a href="#" class="pull-right"></a>
+            </div>
+        {% endif %}
+        <form  role="form" method="post" action="/wsnetwork/all_nodes/{{coordinador}}/" ><!---"/validar/" ---->
+            <input type="hidden" name="coordinador" value="{{coordinador}}"/>
+                <!---fila de checbox--->
+                <div class="row">
+                    <div class="col-lg-12">
+	    			    <h2>{{form.parametros.label}}</h2>
+			        </div>
+                    <div class="col-lg-12">
+                        <div class="form-group">
+                            <div class="checkbox">
+                                {% for checkbox in form.parametros%}
+                                   <label class="checkbox-inline">
+                                       {{ checkbox.tag }}{{ checkbox.choice_label }}
+                                   </label>
+                                {% endfor %}
+                            </div>
+                        </div><!-----columna de boxes--->
+                    </div><!-----columna--->
+
+                    <div class="nodos">
+                        {% for nodo in nodos %}
+
+                            <div class="col-xs-6 col-md-4">
+                                <div class="panel panel-primary">
+                                    <div class="panel-heading text-capitalize text-center">NODO: {{red.nombre_De_Red}}</div>
+                                       <div class="panel-body">
+                                           <div class="form-group">
+                                                <div class="checkbox">
+                                                    <label>
+                                                        <!----- /wsnetwork/graph/------>
+                                                        <input type="checkbox" value="{{nodo.direccion_de_nodo}}" name="nodos"><h8>Dirección: <a href="{% url 'graph' nodo.direccion_de_nodo %}">{{nodo.direccion_de_nodo}}</a></h8>
+                                                    </label>
+                                                </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        {% endfor %}
+                    </div>
+                </div><!--/.row-->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary push-left">Generar</button>
+                </div><!----div boton-->
+        </form><!--- formulario--->
+    </div><!---col-md-12-->
+</div> <!----panel body-->
+
+<script type="text/javascript">
+$(function() {
+    function get_new_post(){
+        console.log("create post is working!") // sanity check
+        $.ajax({
+            url : "{% url 'new_nodes' %}", // the endpoint
+            type : "POST", // http method
+            data : {network: '{{coordinador}}' }, // data sent with the post request
+            // handle a successful response
+            success : function(json) {
+                console.log(json); // log the returned json to the console
+                console.log(json.length);
+                var data_length = json.length;
+                if(data_length==0){
+                    $("#esconder").hide();
+                    $(".no_nodo").empty();
+                     $(".no_nodo").append("<div class='col-xs-6 col-md-4'>"+
+                                "<div class='panel panel-primary'>"+
+                                   "<div class='panel-heading text-capitalize text-center'>No Existen Nodos</div>"+
+                                       "</div> </div>");
+                    console.log("no existen nodos");
+                }
+                else{
+                    $("#esconder").show();
+                    $(".nodos").empty();
+                    $(".no_nodo").empty();
+                for (var i = 0; i < data_length; i++) {
+
+                    var a = json[i]["direccion"]
+                    //alert(json[i]["direccion"] + " " + json[i]["titulo"]);
+                    $(".nodos").append("<div class='col-xs-6 col-md-4'>"+
+                                "<div class='panel panel-primary'>"+
+                                   "<div class='panel-heading text-capitalize text-center'>NODO:</div>"+
+                                       "<div class='panel-body'>"+
+                                           "<div class='form-group'>"+
+                                                "<div class='checkbox'>"+
+                                                    "<label>"+
+                                                        "<!----- /wsnetwork/graph/------>"+
+                                                        "<input type='checkbox' value='"+
+                                                        json[i]["direccion"]+"' name='nodos'>"+
+                                                        "<h8>Dirección: <a href='/wsnetwork/node_graph/"+json[i]["direccion"] +"'>"+
+                                                        json[i]["direccion"]+"</a></h8>"+
+                                                    "</label></div></div> </div></div> </div>");
+                    console.log("existen nodos");
+
+                }
+
+                }
+                console.log("success"); // another sanity check
+                setTimeout(get_new_post,5000);
+
+
+            },
+            // handle a non-successful response
+            error : function(xhr,errmsg,err) {
+                $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                    " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+            }
+        });
+    };
+ window.onload=get_new_post;
+    });
+</script>
+    {% endblock %}

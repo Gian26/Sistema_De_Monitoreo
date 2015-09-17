@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+
+#clock { font-family: Arial, Helvetica, sans-serif; font-size: 2em; color: white; background-color: green ; border: 4px solid purple; padding: 4px; }
+</style>
+    <title>{{titulo}}</title>
+
+{% load staticfiles %}
+    <link href="{% static 'modulo_monitoreo/css/bootstrap.css' %}" type="text/css" rel="stylesheet"  />
+    <link href="{% static 'modulo_monitoreo/css/bootstrap.min.css' %}" type="text/css" rel="stylesheet">
+    <link href="{% static 'modulo_monitoreo/css/daterangepicker-bs3.css' %}" type="text/css" rel="stylesheet"  />
+   	<link href="{% static 'modulo_monitoreo/css/bootstrap.min.css' %}" type="text/css" rel="stylesheet">
+    <link href="{% static 'modulo_monitoreo/css/font-awesome.min.css' %}" type="text/css" rel="stylesheet">
+    <link href="{% static 'modulo_monitoreo/css/metisMenu.min.css' %}" type="text/css" rel="stylesheet">
+
+    <link href="{% static 'modulo_monitoreo/css/styles.css' %}" type="text/css" rel="stylesheet">
+
+    <script src="{% static 'modulo_monitoreo/js/jquery-1.11.1.min.js' %}" type="text/javascript" ></script>
+    <script src="{% static 'modulo_monitoreo/js/jquery.min.js' %}" type="text/javascript" ></script>
+    <script src="{% static 'modulo_monitoreo/js/bootstrap.min.js' %}" type="text/javascript" ></script>
+	<script src="{% static 'modulo_monitoreo/js/moment.js' %}" type="text/javascript" ></script>
+	<script src="{% static 'modulo_monitoreo/js/daterangepicker.js' %}" type="text/javascript" ></script>
+
+    <!--[if lt IE 9]>
+    <script src="{% static 'modulo_monitoreo/js/html5shiv.js' %}" type="text/javascript" ></script>
+    <script src="{% static 'modulo_monitoreo/js/respond.min.js' %}" type="text/javascript" ></script>
+    <![endif]-->
+
+    <script src="{% static 'modulo_monitoreo/amcharts/amcharts.js' %}" type="text/javascript"></script>
+    <script src="{% static 'modulo_monitoreo/amcharts/serial.js' %}" type="text/javascript"></script>
+    <script src="{% static 'modulo_monitoreo/amcharts/pie.js' %}" type="text/javascript"></script>
+    <script src="{% static 'modulo_monitoreo/amcharts/gauge.js' %}" type="text/javascript"></script>
+    <script src="{% static 'modulo_monitoreo/amcharts/amstock.js' %}" type="text/javascript"></script>
+
+{% block google_maps%}
+{% endblock %}
+<!-- scripts for exporting chart as an image -->
+<!-- Note, the exporting will work only if you view the file from web server -->
+<!-- Exporting to image works on all modern browsers except IE9 (IE10 works fine) -->
+<!--[if (!IE) | (gte IE 10)]> -->
+<script src="{% static 'modulo_monitoreo/amcharts/exporting/amexport.js' %}" type="text/javascript"></script>
+<script src="{% static 'modulo_monitoreo/amcharts/exporting/rgbcolor.js' %}" type="text/javascript"></script>
+<script src="{% static 'modulo_monitoreo/amcharts/exporting/canvg.js' %}" type="text/javascript"></script>
+<script src="{% static 'modulo_monitoreo/amcharts/exporting/filesaver.js' %}" type="text/javascript"></script>
+<script src="{% static 'modulo_monitoreo/js/monitoreo_js/reloj.js' %}" type="text/javascript"></script>
+<script src="{% static 'modulo_monitoreo/js/monitoreo_js/range_calendar.js' %}" type="text/javascript"></script>
+<!-- <![endif]-->
+
+ <script>
+  AmCharts.loadJSON = function(url) {
+  // create the request
+  if (window.XMLHttpRequest) {
+    // IE7+, Firefox, Chrome, Opera, Safari
+    var request = new XMLHttpRequest();
+  } else {
+    // code for IE6, IE5
+    var request = new ActiveXObject('Microsoft.XMLHTTP');
+  }
+
+  // load it
+  // the last "false" parameter ensures that our code will wait before the
+  // data is loaded
+  request.open('GET', url, false);
+  request.send();
+
+  // parse adn return the output
+  return eval(request.responseText);
+};
+</script>
+     <!-- Foundation & FontAwesome -->
+
+    <script src="{% static  'modulo_monitoreo/js/d3.v3.min.js' %}"></script>
+    <script type="text/javascript" src="{% static  'modulo_monitoreo/js/trianglify.min.js'%} "></script>
+
+    <script type="text/javascript">
+    // random background pattern
+    $(function(){
+
+      // See more options here: https://github.com/qrohlf/trianglify#options
+      var ops = {
+       x_gradient: ["#deebf7", "#9ecae1", "#3182bd"],
+    y_gradient: ["#deebf7", "#9ecae1", "#3182bd"],
+        noiseIntensity: 0,
+      }
+
+      var t = new Trianglify(ops);
+      var pattern = t.generate(document.body.clientWidth, document.body.clientHeight);
+      document.body.setAttribute('style', 'background-image: '+pattern.dataUrl);
+
+
+    });
+
+    </script>
+    {% block scripts %} {% endblock %}
+{% block mapscript %}{% endblock %}
+</head>
+
+<body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top  panel-dblue" role="navigation">
+
+		<div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand page-scroll" href="{% url 'dashboard' %}">
+                        <i class="glyphicon glyphicon-dashboard"></i>
+
+                        SISTEMA<span class="light">DE</span>MONITOREO
+                </a>
+            </div>
+		</div><!-- /.container-fluid -->
+	</nav>
+
+
+
+    <div id="sidebar-collapse" class="col-sm-3 col-lg-2 sidebar text-capitalize">
+
+		<ul class="nav menu">
+
+
+            {% if activo == "Centro_Redes"%}
+                <li class="active">
+             {% else %}<li>{% endif %}<a href="{% url 'dashboard' %}"><span class="glyphicon glyphicon-dashboard"></span>Redes De Sensores</a></li>
+
+<!--            {% if activo == "map"%}
+                <li class="active">
+             {% else %}<li>{% endif %}<a href="/maps"><span class="glyphicon glyphicon-globe"></span>Mapa</a></li>
+-->
+
+           <!--
+            /nodos/{{red.direccion_Coordinador}}
+           <li><a href="charts.html"><span class="glyphicon glyphicon-stats"></span> Charts</a></li>
+			<li><a href="tables.html"><span class="glyphicon glyphicon-list-alt"></span> Tables</a></li>
+			<li><a href="forms.html"><span class="glyphicon glyphicon-pencil"></span> Forms</a></li>
+            <li><a href="panels.html"><span class="glyphicon glyphicon-info-sign"></span> Alerts &amp; Panels</a></li>
+            -->
+            <li class="parent ">
+				<a href="#">
+					<span class="glyphicon glyphicon-globe"></span>Mapa de Nodos<span data-toggle="collapse" href="#sub-item-1" class="icon pull-right"><em class="glyphicon glyphicon-s glyphicon-plus"></em></span>
+				</a>
+				<ul class="children collapse" id="sub-item-1">
+                    {%for red in redes%}
+                        {% if activo == red.direccion_Coordinador%}
+                            <li class="active">
+                        {% else %}
+                            <li>
+                        {% endif %}<a href="/wsnetwork/maps/{{red.direccion_Coordinador}}" class=""><span class="glyphicon glyphicon-th"></span>{{red.nombre_De_Red}}</a></li>
+                    {% endfor %}
+
+				</ul>
+			</li>
+			<li role="presentation" class="divider"></li>
+		    <li id="reloj_analogico" style="width:auto; height:190px;"></li>
+            <li role="presentation" class="divider"></li>
+            <li ><a><span id="demo" class="glyphicon glyphicon-calendar"></span></a></li>
+         </ul>
+     <div class="attribution">Centro de Innovación Tecnológica de Quintana Roo</div>
+	</div><!--/.sidebar-->
+
+     <!--main-->
+     <div class="col-sm-9 col-sm-offset-3 col-lg-10 col-lg-offset-2 main">
+         <div class="row">
+            <ol class="breadcrumb">
+                    {% block route %}
+                    {% endblock%}
+            </ol>
+            <div class="col-lg-12">
+                <h1 class="page-header panel-noback text-center text-uppercase " ><bold>{{titulo}}</bold></h1>
+            </div>
+        </div><!--/.row-->
+
+    {% block content %}
+
+    {% endblock %}
+
+    </div>	<!--/.main-->
+
+	<script src="{% static 'modulo_monitoreo/js/bootstrap.min.js' %}"></script>
+	<script src="{% static 'modulo_monitoreo/js/chart.min.js' %}"></script>
+	<script src="{% static 'modulo_monitoreo/js/chart-data.js' %}"></script>
+	<script src="{% static 'modulo_monitoreo/js/easypiechart.js' %}"></script>
+	<script src="{% static 'modulo_monitoreo/js/easypiechart-data.js' %}"></script>
+	<script src="{% static 'modulo_monitoreo/js/bootstrap-datepicker.js' %}"></script>
+
+</body>
+
+</html>

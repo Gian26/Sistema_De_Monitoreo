@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>amCharts tutorial: Loading external data</title>
+</head>
+<body>
+{% load staticfiles %}
+  <!-- prerequisites -->
+        <script src="{% static 'modulo_monitoreo/amcharts/amcharts.js' %}" type="text/javascript"></script>
+        <script src="{% static 'modulo_monitoreo/amcharts/serial.js' %}" type="text/javascript"></script>
+
+  <!-- cutom functions -->
+  <script>
+
+  AmCharts.loadJSON = function(url) {
+  // create the request
+  if (window.XMLHttpRequest) {
+    // IE7+, Firefox, Chrome, Opera, Safari
+    var request = new XMLHttpRequest();
+  } else {
+    // code for IE6, IE5
+    var request = new ActiveXObject('Microsoft.XMLHTTP');
+  }
+
+  // load it
+  // the last "false" parameter ensures that our code will wait before the
+  // data is loaded
+  request.open('GET', url, false);
+  request.send();
+
+  // parse adn return the output
+  return eval(request.responseText);
+};
+  </script>
+<h1>LOOK NANNY ITS WORKING :D<h1>
+  <!-- chart container -->
+  <div id="chartdiv" style="width: 1000px; height: 300px;"></div>
+
+  <!-- the chart code -->
+  <script>
+// create chart
+AmCharts.ready(function() {
+
+  // load the data
+  var chartData = AmCharts.loadJSON('/index');
+  console.debug(AmCharts.loadJSON('/index'));
+  // SERIAL CHART
+  chart = new AmCharts.AmSerialChart();
+  chart.pathToImages = "http://www.amcharts.com/lib/images/";
+  chart.dataProvider = chartData;
+  chart.categoryField = "fecha";
+  chart.dataDateFormat = "YYYY-MM-DD JJ:NN:SS";
+
+  // GRAPHS
+
+  var graph1 = new AmCharts.AmGraph();
+  graph1.valueField = "temperatura";
+  graph1.bullet = "round";
+  graph1.bulletBorderColor = "#FFFFFF";
+  graph1.bulletBorderThickness = 2;
+  graph1.lineThickness = 2;
+  graph1.lineAlpha = 0.5;
+  chart.addGraph(graph1);
+
+  // CATEGORY AXIS
+  chart.categoryAxis.parseDates = true;
+  chart.categoryAxis.minPeriod = "ss"
+
+  // WRITE
+  chart.write("chartdiv");
+});
+
+  </script>
+
+</body>
+</html>
+
